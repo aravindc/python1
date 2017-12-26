@@ -48,13 +48,14 @@ def write_data(response,vcatId,region):
     if response is not None:
         for video in response.get('items',[]):
             f = codecs.open(now.strftime("%Y%m%d")+'.csv','a','utf-8')
-            f.write('"%s"|"%s"|"%s"|"%s"|"%s"|"%s"|"%s"|"%s"|"%s"|"%s"|"%s"\n' %
+            #f.write('%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n' %
+            f.write('%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n' %
                (
                now.strftime("%Y-%m-%d"),
                vcatId,region,
                video['id'] if 'id' in video else None,
-               video['snippet']['title'] if 'title' in video['snippet'] else None,
-               video['snippet']['description'].replace('\n',' ')  if 'description' in video['snippet'] else None,
+               video['snippet']['title'].replace(',',' ') if 'title' in video['snippet'] else None,
+               #video['snippet']['description'].replace('\n',' ').replace(',',' ')  if 'description' in video['snippet'] else None,
                video['snippet']['publishedAt']  if 'publishedAt' in video['snippet'] else None,
                video['statistics']['viewCount'] if 'viewCount' in video['statistics'] else None,
                video['statistics']['likeCount'] if 'likeCount' in video['statistics'] else None,
