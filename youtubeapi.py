@@ -1,6 +1,8 @@
 import os
 import re
 import json
+import datetime
+import codecs
 
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
@@ -16,9 +18,14 @@ DEVELOPER_KEY = 'AIzaSyAHp_6KLQIzlfrpm0h6LS5TzGZLQHdDZyM'
 YOUTUBE_API_SERVICE_NAME = 'youtube'
 YOUTUBE_API_VERSION = 'v3'
 
-VIDEO_CATEGORIES = '{"1" : "Film & Animation","2" : "Autos & Vehicles","10" : "Music","15" : "Pets & Animals","17" : "Sports","18" : "Short Movies","19" : "Travel & Events","21" : "Videoblogging","20" : "Gaming","22" : "People & Blogs","23" : "Comedy","24" : "Entertainment","25" : "News & Politics","26" : "Howto & Style","27" : "Education","28" : "Science & Technology","29" : "Nonprofits & Activism","30" : "Movies","31" : "Anime/Animation","32" : "Action/Adventure","33" : "Classics","34" : "Comedy","35" : "Documentary","36" : "Drama","37" : "Family","38" : "Foreign","39" : "Horror","40" : "Sci-Fi/Fantasy","41" : "Thriller","42" : "Shorts","43" : "Shows","44" : "Trailers"}'
+#"18" : "Short Movies","21" : "Videoblogging","30" : "Movies","31" : "Anime/Animation","32" : "Action/Adventure","33" : "Classics","34" : "Comedy","35" : "Documentary","36" : "Drama","37" : "Family","38" : "Foreign","39" : "Horror","40" : "Sci-Fi/Fantasy","41" : "Thriller","42" : "Shorts","43" : "Shows","44" : "Trailers"
+VIDEO_CATEGORIES = '{"1" : "Film & Animation","2" : "Autos & Vehicles","10" : "Music","15" : "Pets & Animals","17" : "Sports","19" : "Travel & Events","20" : "Gaming","22" : "People & Blogs","23" : "Comedy","24" : "Entertainment","25" : "News & Politics","26" : "Howto & Style","27" : "Education","28" : "Science & Technology","29" : "Nonprofits & Activism"}'
+#VIDEO_CATEGORIES = '{"1": "Film & Animation"}'
 
 REGIONS = ['US','CA','DE','FR','IN','CN','FR','RU','AU']
+#REGIONS = ['US']
+
+now = datetime.datetime.now()
 
 # Authorize the request and store authorization credentials.
 def get_authenticated_service():
@@ -26,35 +33,53 @@ def get_authenticated_service():
 
 # Sample python code for videos.list
 
-def videos_list_most_popular(client, **kwargs):
+def videos_list_most_popular(vcatId,region,client, **kwargs):
   # See full sample for function
-  #kwargs = remove_empty_kwargs(**kwargs)
-  response = client.videos().list(
-    **kwargs
-  ).execute()
+  response = None
+  while response is None:
+      try:
+          response = client.videos().list(**kwargs).execute()
+      except HttpError as e:
+          print('%s not available in %s' % (vcatId,region))
+          break
+  return write_data(response,vcatId,region)
 
-  return print_response(response)
-
-def print_response(response):
-  print(response)
-
-# Remove keyword arguments that are not set
-def remove_empty_kwargs(**kwargs):
-  good_kwargs = {}
-  if kwargs is not None:
-    for key, value in kwargs.iteritems():
-      if value:
-        good_kwargs[key] = value
-  return good_kwargs
-
-
+def write_data(response,vcatId,region):
+    if response is not None:
+        for video in response.get('items',[]):
+            f = codecs.open(now.strftime("%Y%m%d")+'.csv','a','utf-8')
+            f.write('"%s"|"%s"|"%s"|"%s"|"%s"|"%s"|"%s"|"%s"|"%s"|"%s"|"%s"\n' %
+               (
+               now.strftime("%Y-%m-%d"),
+               vcatId,region,
+               video['id'] if 'id' in video else None,
+               video['snippet']['title'] if 'title' in video['snippet'] else None,
+               video['snippet']['description'].replace('\n',' ')  if 'description' in video['snippet'] else None,
+               video['snippet']['publishedAt']  if 'publishedAt' in video['snippet'] else None,
+               video['statistics']['viewCount'] if 'viewCount' in video['statistics'] else None,
+               video['statistics']['likeCount'] if 'likeCount' in video['statistics'] else None,
+               video['statistics']['dislikeCount'] if 'dislikeCount' in video['statistics'] else None,
+               video['statistics']['commentCount']  if 'commentCount' in video['statistics'] else None
+               )) #Give your csv text here.
+            ## Python will convert \n to os.linesep
+            f.close()
 
 if __name__ == '__main__':
+    try:
+        os.remove(now.strftime("%Y%m%d")+'.csv')
+    except OSError:
+        pass
     youtube = get_authenticated_service()
     videoCategoriesObject = json.loads(VIDEO_CATEGORIES)
-    for videoCategoryId in videoCategoriesObject:
+    for vcatId in videoCategoriesObject:
         for region in REGIONS:
-            print(videoCategoryId+":",region)
+            videos_list_most_popular(vcatId,region,youtube,
+                part='statistics,snippet',
+                chart='mostPopular',
+                regionCode=region,
+                videoCategoryId=vcatId,
+                maxResults=50
+                 )
 
     #videos_list_most_popular(youtube,
     #    part='snippet,contentDetails,statistics',
