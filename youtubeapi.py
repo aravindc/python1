@@ -22,14 +22,14 @@ YOUTUBE_API_VERSION = 'v3'
 # "33" : "Classics","34" : "Comedy","35" : "Documentary","36" : "Drama","37" : "Family","38" : "Foreign",
 # "39" : "Horror","40" : "Sci-Fi/Fantasy","41" : "Thriller","42" : "Shorts","43" : "Shows","44" : "Trailers"
 
-VIDEO_CATEGORIES = '{"1" : "Film & Animation","2" : "Autos & Vehicles","10" : "Music","15" : "Pets & Animals",' \
-                   '"17" : "Sports","19" : "Travel & Events","20" : "Gaming","22" : "People & Blogs","23" : "Comedy",' \
-                   '"24" : "Entertainment","25" : "News & Politics","26" : "Howto & Style","27" : "Education",' \
-                   '"28" : "Science & Technology","29" : "Nonprofits & Activism"}'
-# VIDEO_CATEGORIES = '{"1": "Film & Animation"}'
+# VIDEO_CATEGORIES = '{"1" : "Film & Animation","2" : "Autos & Vehicles","10" : "Music","15" : "Pets & Animals",' \
+#                   '"17" : "Sports","19" : "Travel & Events","20" : "Gaming","22" : "People & Blogs","23" : "Comedy",' \
+#                   '"24" : "Entertainment","25" : "News & Politics","26" : "Howto & Style","27" : "Education",' \
+#                   '"28" : "Science & Technology","29" : "Nonprofits & Activism"}'
+VIDEO_CATEGORIES = '{"1": "Film & Animation"}'
 
-REGIONS = ['US', 'CA', 'DE', 'FR', 'IN', 'CN', 'FR', 'RU', 'AU', 'GB', 'JP']
-# REGIONS = ['US']
+# REGIONS = ['US', 'CA', 'DE', 'FR', 'IN', 'CN', 'FR', 'RU', 'AU', 'GB', 'JP']
+REGIONS = ['US']
 
 now = datetime.datetime.now()
 
@@ -51,6 +51,10 @@ def videos_list_most_popular(vcatId, region, client, **kwargs):
             print('%s not available in %s' % (vcatId, region))
             break
     return write_data(response, vcatId, region)
+
+
+def parse_data(response):
+    return response
 
 
 def write_data(response, vcatId, region):
